@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surrounded by Selectors</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: url('your-background-image.jpg') no-repeat center center fixed; /* Replace with your image path */
+            background-size: cover;
+            color: white;
+            transition: background-color 0.1s;
+        }
+        model-viewer {
+            width: 80%;
+            height: 60vh;
+            display: block;
+            margin: auto;
+        }
+        .fancy-button {
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .fancy-button:hover {
+            background-color: black;
+            color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transform: scale(1.1);
+        }
+        #display-image {
+            max-width: 80%;
+            max-height: 80%;
+            margin-top: 20px;
+            display: none;
+        }
+        #audio-player {
+            display: none;
+        }
+        #play-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #play-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <model-viewer id="model-viewer"
+                  src="Buehne.glb"
+                  ios-src="Buehne.usdc"
+                  alt="The Portal"
+                  ar
+                  ar-modes="webxr scene-viewer quick-look"
+                  environment-image="neutral"
+                  auto-rotate
+                  camera-controls
+                  animation-name="CubeAction"
+                  animation-loop>
+    </model-viewer>
+
+    <button class="fancy-button" onclick="showImage(event)">???</button>
+    <img id="display-image" src="" alt="Image">
+
+    <audio id="audio-player">
+        <source src="Buehneaudio.ogg" type="audio/ogg">
+        <source src="Buehneaudio.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <button id="play-button">Play</button>
+
+    <a href="https://www.instagram.com/leonkoeroesi/" target="_blank">
+        <img src="instagram.png" alt="Instagram" width="50" height="50">
+    </a>
+
+    <script>
+        document.getElementById('play-button').addEventListener('click', function() {
+            const audio = document.getElementById('audio-player');
+            if (audio.paused) {
+                audio.play();
+                this.textContent = 'Pause';
+            } else {
+                audio.pause();
+                this.textContent = 'Play';
+            }
+        });
+
+        function showImage(event) {
+            event.stopPropagation();
+            const img = document.getElementById('display-image');
+            img.src = 'Text_AR_2.png'; // Replace with the path to your image
+            img.style.display = 'block';
+        }
+
+        document.addEventListener('click', function() {
+            const img = document.getElementById('display-image');
+            img.style.display = 'none';
+        });
+
+        document.getElementById('display-image').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+        async function checkARCoreCompatibility() {
+            const modelViewer = document.getElementById('model-viewer');
+            const isARCoreSupported = await navigator.xr.isSessionSupported('immersive-ar');
+            if (!isARCoreSupported) {
+                modelViewer.removeAttribute('ar');
+                modelViewer.removeAttribute('ar-modes');
+                alert('Your device is not compatible with AR features. You can still view the 3D model.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkARCoreCompatibility);
+    </script>
+</body>
+</html>
