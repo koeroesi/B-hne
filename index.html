@@ -1,138 +1,130 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surrounded by Selectors</title>
+    <title>Topographic AR Experience</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* General Styling */
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: url('your-background-image.jpg') no-repeat center center fixed; /* Replace with your image path */
-            background-size: cover;
+            background: black;
             color: white;
-            transition: background-color 0.1s;
+            height: 100vh;
+            position: relative;
         }
-        model-viewer {
-            width: 80%;
-            height: 60vh;
-            display: block;
-            margin: auto;
+
+        /* Background Canvas */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
-        .fancy-button {
-            background-color: white;
-            color: black;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            outline: none;
-            border-radius: 5px;
+
+        /* Content Styling */
+        .content {
+            text-align: center;
+            z-index: 1;
+        }
+
+        .content h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .content p {
+            font-size: 1.2rem;
             margin-bottom: 20px;
         }
-        .fancy-button:hover {
-            background-color: black;
-            color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            transform: scale(1.1);
-        }
-        #display-image {
-            max-width: 80%;
-            max-height: 80%;
-            margin-top: 20px;
-            display: none;
-        }
-        #audio-player {
-            display: none;
-        }
-        #play-button {
-            background-color: #007bff;
-            color: white;
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.2);
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
             border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        #play-button:hover {
-            background-color: #0056b3;
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.4);
         }
     </style>
 </head>
 <body>
-    <model-viewer id="model-viewer"
-                  src="Buehne.glb"
-                  ios-src="Buehne.usdz"
-                  alt="The Portal"
-                  ar
-                  ar-modes="webxr scene-viewer quick-look"
-                  environment-image="neutral"
-                  auto-rotate
-                  camera-controls
-                  animation-name="CubeAction"
-                  animation-loop>
-    </model-viewer>
+    <canvas id="topoCanvas"></canvas>
 
-    <button class="fancy-button" onclick="showImage(event)">???</button>
-    <img id="display-image" src="" alt="Image">
-
-    <audio id="audio-player">
-        <source src="Buehneaudio.ogg" type="audio/ogg">
-        <source src="Buehneaudio.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <button id="play-button">Play</button>
-
-    <a href="https://www.instagram.com/leonkoeroesi/" target="_blank">
-        <img src="instagram.png" alt="Instagram" width="50" height="50">
-    </a>
+    <div class="content">
+        <h1>Explore in AR</h1>
+        <p>Interact with this 3D model in real-time.</p>
+        <model-viewer src="model.glb" 
+                      ios-src="model.usdz" 
+                      alt="3D Model" 
+                      ar 
+                      auto-rotate 
+                      camera-controls>
+        </model-viewer>
+        <button onclick="activateAR()">View in AR</button>
+    </div>
 
     <script>
-        document.getElementById('play-button').addEventListener('click', function() {
-            const audio = document.getElementById('audio-player');
-            if (audio.paused) {
-                audio.play();
-                this.textContent = 'Pause';
-            } else {
-                audio.pause();
-                this.textContent = 'Play';
-            }
-        });
+        const canvas = document.getElementById("topoCanvas");
+        const ctx = canvas.getContext("2d");
 
-        function showImage(event) {
-            event.stopPropagation();
-            const img = document.getElementById('display-image');
-            img.src = 'Text_AR_2.png'; // Replace with the path to your image
-            img.style.display = 'block';
+        let width, height, time = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        function drawTopography() {
+            ctx.clearRect(0, 0, width, height);
+
+            const layers = 20; // Number of layers
+            const step = 25; // Distance between contour levels
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < layers; i++) {
+                const level = i * step;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${1 - i / layers})`;
+                ctx.beginPath();
+
+                for (let angle = 0; angle <= 360; angle += 1) {
+                    const rad = (angle * Math.PI) / 180;
+                    const x = width / 2 + (level + Math.sin(time / 100 + i) * 15) * Math.cos(rad);
+                    const y = height / 2 + (level + Math.cos(time / 100 + i) * 15) * Math.sin(rad);
+                    angle === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            time += 1; // Animation speed
+            requestAnimationFrame(drawTopography);
         }
 
-        document.addEventListener('click', function() {
-            const img = document.getElementById('display-image');
-            img.style.display = 'none';
-        });
+        drawTopography();
 
-        document.getElementById('display-image').addEventListener('click', function(event) {
-            event.stopPropagation();
-        });
-
-        async function checkARCoreCompatibility() {
-            const modelViewer = document.getElementById('model-viewer');
-            const isARCoreSupported = await navigator.xr.isSessionSupported('immersive-ar');
-            if (!isARCoreSupported) {
-                modelViewer.removeAttribute('ar');
-                modelViewer.removeAttribute('ar-modes');
-                alert('Your device is not compatible with AR features. You can still view the 3D model.');
-            }
+        function activateAR() {
+            alert("AR mode activated!");
         }
-
-        document.addEventListener('DOMContentLoaded', checkARCoreCompatibility);
     </script>
 </body>
 </html>
